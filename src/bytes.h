@@ -11,7 +11,7 @@ namespace szip {
 class Bytes {
 public:
     template <typename T>
-    static uint write(const T& value, vector<unsigned char>& buffer, int offset) {
+    static unsigned int write(const T& value, vector<unsigned char>& buffer, int offset) {
         if (offset < 0) {
             offset = buffer.size();
         }
@@ -31,7 +31,7 @@ public:
     }
 
     template <typename T>
-    static T peek(unsigned char* buffer, int offset, int count = -1) {
+    static T peek(unsigned char* buffer, int offset) {
         if (offset < 0) {
             offset = 0;
         }
