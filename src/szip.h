@@ -1,9 +1,7 @@
 #pragma once
 
 #include <vector>
-// The zlib library must be installed, for example(for macos): brew install zlib
-// link flag: -lz
-#include <zlib.h>
+#include <string>
 
 using namespace std;
 
@@ -13,9 +11,10 @@ using namespace std;
 class Szip {
 public:
     static bool fileExists(const string& filename);
-    static uint fileLength(const string& filename);
+    static unsigned int fileLength(const string& filename);
     static int createDirectories(const string& path);
     static string buildPath(const string& root, const string& subPath);
+    static string baseName(const string& path);
     static bool isDir(const string& name);
     static bool isFile(const string& name);
     static void getFiles(const string& path, vector<string>& files);

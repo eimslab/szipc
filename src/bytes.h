@@ -3,6 +3,7 @@
 #include <vector>
 #include <cassert>
 #include <istream>
+#include <string>
 
 using namespace std;
 
@@ -21,7 +22,7 @@ public:
 
         unsigned char* p = (unsigned char*)&value;
 
-        uint i = 0;
+        unsigned int i = 0;
         while (i < sizeof(T)) {
             buffer[offset + sizeof(T) - i - 1] = p[i];
             i++;
@@ -39,7 +40,7 @@ public:
         T t;
         unsigned char* p = (unsigned char*)&t;
 
-        uint i = 0;
+        unsigned int i = 0;
         while (i < sizeof(T)) {
             p[i] = buffer[offset + sizeof(T) - i - 1];
             i++;

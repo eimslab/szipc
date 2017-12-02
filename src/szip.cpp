@@ -3,11 +3,15 @@
 #include <fstream>
 #include <cstdint>
 #include <libgen.h>
+#include <cstring>
+#include <sys/stat.h>
+// The zlib library must be installed, for example(for macos): brew install zlib
+// link flag: -lz
+#include <zlib.h>
 #ifdef _WIN32
     #include <direct.h>
     #include <io.h>
 #else
-    #include <sys/stat.h>
     #include <sys/types.h>
     #include <dirent.h>
 #endif
@@ -66,7 +70,7 @@ bool Szip::fileExists(const string& filename) {
     return (access(filename.c_str(), F_OK) != -1);
 }
 
-uint Szip::fileLength(const string& filename) {
+unsigned int Szip::fileLength(const string& filename) {
     ifstream is;
     is.open(filename, ios::binary);
     is.seekg(0, ios::end);
@@ -116,6 +120,32 @@ string Szip::buildPath(const string& root, const string& subPath) {
     return root + "/" + subPath;
 }
 
+string Szip::baseName(const string& path) {
+#ifdef _WIN32
+	if (path.length() == 0 || path == "\\" || path == "/") {
+		return "";
+	}
+
+	char* t = strdup(path.c_str());
+	if (t[strlen(t) - 1] == '\\' || t[strlen(t) - 1] == '/') {
+		t[strlen(t) - 1] = '\0';
+	}
+
+	int i = strlen(t);
+	while (--i >= 0) {
+		if (t[i] == '\\' || t[i] == '/') {
+			break;
+		}
+	}
+
+	string ret(t + i + 1);
+	delete t;
+	return ret;
+#else
+	return basename((char*)path.c_str());
+#endif
+}
+
 bool Szip::isDir(const string& name) {
     struct stat buf = { 0 };
     stat(name.c_str(), &buf);
@@ -131,16 +161,23 @@ bool Szip::isFile(const string& name) {
 void Szip::getFiles(const string& path, vector<string>& files) {
 #ifdef _WIN32
     intptr_t handle;
-    finddata_t fileinfo;
+    _finddata_t fileinfo;
 
-    handle = _findfirst(path.c_str(), &fileinfo);
+    string dir = path;
+    if (dir[dir.length() - 1] != '\\' || dir[dir.length() - 1] != '/') {
+        dir += "/";
+    }
+    dir += "*.*";
+
+    handle = _findfirst(dir.c_str(), &fileinfo);
     if (handle == -1) {
         return;
     }
 
     do {
-        if (!(fileinfo.attrib & _A_SUBDIR))
-            files.push_back(fileinfo.name);
+        if (!(fileinfo.attrib & _A_SUBDIR)) {
+            files.push_back(buildPath(path, fileinfo.name));
+        }
     } while (_findnext(handle, &fileinfo) == 0);
 
     _findclose(handle);
@@ -167,8 +204,9 @@ void Szip::getFiles(const string& path, vector<string>& files) {
             assert(false);
         }
 
-        if (!S_ISDIR(file_stat.st_mode))
+        if (!S_ISDIR(file_stat.st_mode)) {
             files.push_back(name);
+        }
     }
 
     closedir(dir);
@@ -178,18 +216,24 @@ void Szip::getFiles(const string& path, vector<string>& files) {
 void Szip::getDirs(const string& path, vector<string>& dirs) {
 #ifdef _WIN32
     intptr_t handle;
-    finddata_t fileinfo;
+    _finddata_t fileinfo;
 
-    handle = _findfirst(path.c_str(), &fileinfo);
+    string dir = path;
+    if (dir[dir.length() - 1] != '\\' || dir[dir.length() - 1] != '/') {
+        dir += "/";
+    }
+    dir += "*.*";
+
+    handle = _findfirst(dir.c_str(), &fileinfo);
     if (handle == -1) {
         return;
     }
 
     do {
         if (fileinfo.attrib & _A_SUBDIR) {
-            if (strcmp(fileinfo.name, ".") == 0 && strcmp(fileinfo.name, "..") == 0)
-                continue;
-            dirs.push_back(fileinfo.name);
+            if (strcmp(fileinfo.name, ".") && strcmp(fileinfo.name, "..")) {
+            	dirs.push_back(buildPath(path, fileinfo.name));
+            }
         }
     } while (_findnext(handle, &fileinfo) == 0);
 
@@ -209,7 +253,7 @@ void Szip::getDirs(const string& path, vector<string>& dirs) {
     while ((d_ent = readdir(dir)) != NULL) {
         struct stat file_stat;
         if (strncmp(d_ent->d_name, ".", 1) == 0 || strncmp(d_ent->d_name, "..", 2) == 0) {
-          continue;
+        	continue;
         }
 
         string name = temppath + d_ent->d_name;
@@ -217,8 +261,9 @@ void Szip::getDirs(const string& path, vector<string>& dirs) {
             assert(false);
         }
 
-        if (S_ISDIR(file_stat.st_mode))
+        if (S_ISDIR(file_stat.st_mode)) {
             dirs.push_back(name);
+        }
     }
 
     closedir(dir);
@@ -237,7 +282,7 @@ int Szip::compressBytes(unsigned char* input, unsigned long len, vector<unsigned
     }
 
     output.reserve(output_len);
-    for (int i = 0; i < output_len; i ++) {
+    for (unsigned long i = 0; i < output_len; i ++) {
         output.push_back(buffer[i]);
     }
     delete[] buffer;
@@ -276,7 +321,7 @@ int Szip::uncompressBytes(unsigned char* input, unsigned long len, vector<unsign
     }
 
     output.reserve(output_len);
-    for (int i = 0; i < output_len; i ++) {
+    for (unsigned long i = 0; i < output_len; i ++) {
         output.push_back(buffer[i]);
     }
     delete[] buffer;
@@ -336,7 +381,7 @@ void Szip::unzip(const string& szipFilename, const string& outputPath) {
     }
 
     string dir = outputPath;
-    int pos = 0;
+    size_t pos = 0;
     while (pos < buffer.size()) {
         unsigned char type = buffer[pos++];
         unsigned short len = szip::Bytes::peek<unsigned short>(buffer.data(), pos);
@@ -349,12 +394,12 @@ void Szip::unzip(const string& szipFilename, const string& outputPath) {
             if (!fileExists(dir))  createDirectories(dir);
         } else {
             string filename = buildPath(dir, name);
-            uint file_len = szip::Bytes::peek<unsigned int>(buffer.data(), pos);
+            unsigned int file_len = szip::Bytes::peek<unsigned int>(buffer.data(), pos);
             pos += 4;
 
             ofstream fout;
             fout.open(filename, ios::binary);
-            for (int i = 0; i < file_len; i++) {
+            for (unsigned int i = 0; i < file_len; i++) {
                 fout << buffer[i + pos];
             }
             fout << flush;
@@ -362,6 +407,11 @@ void Szip::unzip(const string& szipFilename, const string& outputPath) {
             pos += file_len;
         }
     }
+    TCHAR a = 'жа';
+    typedef std::basic_string<TCHAR> TCharString;
+
+    TCharString ch = "жа";
+    cout << ch << ", " << ch.length() << endl;
 }
 
 // private:
@@ -369,14 +419,15 @@ void Szip::unzip(const string& szipFilename, const string& outputPath) {
 void Szip::readFile(const string& dir, const string& rootDir, vector<unsigned char>& buffer) {
     vector<string> files;
     getFiles(dir, files);
-    for (int i = 0; i < files.size(); i++) {
-        put(PUT_FILE_T, files[i], buffer);
+    for (size_t i = 0; i < files.size(); i++) {
+    	put(PUT_FILE_T, files[i], buffer);
     }
 
     vector<string> dirs;
     getDirs(dir, dirs);
-    for (int i = 0; i < dirs.size(); i++) {
-        string t = buildPath(rootDir, basename((char*)dirs[i].c_str()));
+    for (size_t i = 0; i < dirs.size(); i++) {
+        string t = buildPath(rootDir, baseName(dirs[i]));
+        cout << rootDir << "+" << baseName(dirs[i]) << "=" << t << endl;
         put(PUT_DIR_T, t, buffer);
         readFile(dirs[i], t, buffer);
     }
@@ -386,10 +437,10 @@ void Szip::put(int type, const string& name, vector<unsigned char>& buffer) {
     assert(type == PUT_DIR_T || type == PUT_FILE_T);
 
     buffer.push_back((unsigned char)type);
-    string t = (type == PUT_FILE_T) ? basename((char*)name.c_str()) : name;
+    string t = (type == PUT_FILE_T) ? baseName(name) : name;
     szip::Bytes::write<unsigned short>((unsigned short)t.length(), buffer, -1);
 
-    for (int i = 0; i < t.length(); i++) {
+    for (size_t i = 0; i < t.length(); i++) {
         buffer.push_back(t[i]);
     }
 

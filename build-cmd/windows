@@ -2,5 +2,5 @@ md Release
 mkdir Release/src
 cd Release
 
-g++ -O3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/szip.d" -MT"src/szip.o" -o "src/szip.o" "../src/szip.cpp"
-g++ -shared -fPIC -o "szipc.dll"  ./src/utils/szip.o
+g++ -O3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/szip.d" -MT"src/szip.o" -o "src/szip.o" "../src/szip.cpp" -I"C:\Program Files\zlib\include"
+g++ -shared -fPIC -o "szipc.dll"  ./src/szip.o -lz
