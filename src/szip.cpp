@@ -407,11 +407,6 @@ void Szip::unzip(const string& szipFilename, const string& outputPath) {
             pos += file_len;
         }
     }
-    TCHAR a = 'жа';
-    typedef std::basic_string<TCHAR> TCharString;
-
-    TCharString ch = "жа";
-    cout << ch << ", " << ch.length() << endl;
 }
 
 // private:

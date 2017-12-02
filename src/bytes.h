@@ -1,9 +1,6 @@
 #pragma once
 
 #include <vector>
-#include <cassert>
-#include <istream>
-#include <string>
 
 using namespace std;
 
