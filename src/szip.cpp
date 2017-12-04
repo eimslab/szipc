@@ -11,6 +11,7 @@
 #ifdef _WIN32
     #include <direct.h>
     #include <io.h>
+	#include <windows.h>
 #else
     #include <sys/types.h>
     #include <dirent.h>
@@ -21,8 +22,6 @@
 
 
 #ifdef _WIN32
-
-#include <windows.h>
 
 #define DLL_EXPORT __declspec(dllexport) __stdcall
 #ifdef __cplusplus
@@ -270,6 +269,48 @@ void Szip::getDirs(const string& path, vector<string>& dirs) {
 #endif
 }
 
+#ifdef _WIN32
+string Szip::ansi2utf8(const string& ansi) {
+	int len = MultiByteToWideChar(CP_ACP, 0, ansi.c_str(), ansi.length(), NULL, 0);
+
+	WCHAR* lpszW = new WCHAR[len];
+	assert(MultiByteToWideChar(CP_ACP, 0, ansi.c_str(), ansi.length(), lpszW, len) == len);
+
+	int utf8_len = WideCharToMultiByte(CP_UTF8, 0, lpszW, len, NULL, 0, NULL, NULL);
+	assert(utf8_len > 0);
+
+	char* utf8_string = new char[utf8_len];
+	assert(WideCharToMultiByte(CP_UTF8, 0, lpszW, len, utf8_string, utf8_len, NULL, NULL) == utf8_len);
+
+	string ret(utf8_string);
+
+	delete[] lpszW;
+	delete[] utf8_string;
+
+	return ret;
+}
+
+string Szip::utf82ansi(const string& utf8) {
+    int len = MultiByteToWideChar(CP_UTF8, 0, (LPCTSTR)utf8.c_str(), utf8.length(), NULL, 0);
+
+    WCHAR* lpszW = new WCHAR[len];
+    assert(MultiByteToWideChar(CP_UTF8, 0, (LPCTSTR)utf8.c_str(), utf8.length(), lpszW, len) == len);
+
+    int ansi_len = WideCharToMultiByte(CP_ACP, 0, lpszW, len, NULL, 0, NULL, NULL);
+    assert(ansi_len > 0);
+
+    char* ansi_string = new char[ansi_len];
+    assert(WideCharToMultiByte(CP_ACP, 0, lpszW, len, ansi_string, ansi_len, NULL, NULL) == ansi_len);
+
+    string ret(ansi_string);
+
+    delete[] lpszW;
+    delete[] ansi_string;
+
+    return ret;
+}
+#endif
+
 int Szip::compressBytes(unsigned char* input, unsigned long len, vector<unsigned char>& output) {
     unsigned long output_len = compressBound(len);
     unsigned char* buffer = new unsigned char[output_len];
@@ -386,7 +427,12 @@ void Szip::unzip(const string& szipFilename, const string& outputPath) {
         unsigned char type = buffer[pos++];
         unsigned short len = szip::Bytes::peek<unsigned short>(buffer.data(), pos);
         pos += 2;
+#ifdef _WIN32
+        string name = utf82ansi(string((char*)buffer.data() + pos, 0, len));
+#else
         string name((char*)buffer.data() + pos, 0, len);
+#endif
+
         pos += len;
 
         if (type == 0x01) {
@@ -422,7 +468,6 @@ void Szip::readFile(const string& dir, const string& rootDir, vector<unsigned ch
     getDirs(dir, dirs);
     for (size_t i = 0; i < dirs.size(); i++) {
         string t = buildPath(rootDir, baseName(dirs[i]));
-        cout << rootDir << "+" << baseName(dirs[i]) << "=" << t << endl;
         put(PUT_DIR_T, t, buffer);
         readFile(dirs[i], t, buffer);
     }
@@ -432,7 +477,11 @@ void Szip::put(int type, const string& name, vector<unsigned char>& buffer) {
     assert(type == PUT_DIR_T || type == PUT_FILE_T);
 
     buffer.push_back((unsigned char)type);
+#ifdef _WIN32
+    string t = ansi2utf8((type == PUT_FILE_T) ? baseName(name) : name);
+#else
     string t = (type == PUT_FILE_T) ? baseName(name) : name;
+#endif
     szip::Bytes::write<unsigned short>((unsigned short)t.length(), buffer, -1);
 
     for (size_t i = 0; i < t.length(); i++) {
