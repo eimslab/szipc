@@ -92,11 +92,11 @@ int Szip::createDirectories(const string& path) {
 
         if (tmp[i] == '\\' || tmp[i] == '/') {
             if (!fileExists(tmp)) {
-                #ifdef _WIN32
-                    int ret = _mkdir(tmp);
-                #else
-                    int ret = mkdir(tmp, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-                #endif
+#ifdef _WIN32
+                int ret = _mkdir(tmp);
+#else
+                int ret = mkdir(tmp, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+#endif
                 if (ret != 0) {
                     return ret;
                 }
@@ -108,7 +108,7 @@ int Szip::createDirectories(const string& path) {
 }
 
 string Szip::buildPath(const string& root, const string& subPath) {
-    if (root == "" || subPath == "") {
+    if (root.empty() || subPath.empty()) {
         return root + subPath;
     }
 
