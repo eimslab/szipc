@@ -10,19 +10,6 @@ using namespace std;
 
 class Szip {
 public:
-    static bool fileExists(const string& filename);
-    static unsigned int fileLength(const string& filename);
-    static int createDirectories(const string& path);
-    static string buildPath(const string& root, const string& subPath);
-    static string baseName(const string& path);
-    static bool isDir(const string& name);
-    static bool isFile(const string& name);
-    static void getFiles(const string& path, vector<string>& files);
-    static void getDirs(const string& path, vector<string>& dirs);
-#ifdef _WIN32
-    static string ansi2utf8(const string& ansi);
-    static string utf82ansi(const string& utf8);
-#endif
     static int compressBytes  (unsigned char* input, unsigned long len, vector<unsigned char>& output);
     static int uncompressBytes(unsigned char* input, unsigned long len, vector<unsigned char>& output);
     static void zip           (const string& sourceDirOrFileName, const string& outputFilename);
