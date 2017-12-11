@@ -248,15 +248,3 @@ void Szip::put(int type, const string& name, vector<unsigned char>& buffer) {
         delete[] content;
     }
 }
-
-
-// test:
-
-//#include "szip.h"
-//#include <string>
-//
-//int main()
-//{
-//    Szip::zip("/Users/shove/Desktop/123", "/Users/shove/Desktop/123.szip");
-//    Szip::unzip("/Users/shove/Desktop/123.szip", "/Users/shove/Desktop/124");
-//}

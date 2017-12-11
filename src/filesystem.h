@@ -17,6 +17,7 @@ void            getFiles(const string& path, vector<string>& files);
 void            getDirs(const string& path, vector<string>& dirs);
 string          thisExePath();
 #ifdef _WIN32
+bool            isUTF8(const void* pBuffer, long size);
 string          ansi2utf8(const string& ansi);
 string          utf82ansi(const string& utf8);
 #endif

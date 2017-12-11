@@ -298,7 +298,61 @@ string thisExePath()
 #endif
 
 #ifdef _WIN32
+bool isUTF8(const void* pBuffer, long size)
+{
+    bool ret = true;
+    unsigned char* start = (unsigned char*)pBuffer;
+    unsigned char* end = (unsigned char*)pBuffer + size;
+
+    while (start < end)
+    {
+        if (*start < 0x80)
+            start++;
+        else if (*start < (0xC0))
+        {
+            ret = false;
+            break;
+        }
+        else if (*start < (0xE0))
+        {
+            if (start >= end - 1)
+                break;
+
+            if ((start[1] & (0xC0)) != 0x80)
+            {
+                ret = false;
+                break;
+            }
+
+            start += 2;
+        }
+        else if (*start < (0xF0))
+        {
+            if (start >= end - 2)
+                break;
+
+            if ((start[1] & (0xC0)) != 0x80 || (start[2] & (0xC0)) != 0x80)
+            {
+                ret = false;
+                break;
+            }
+
+            start += 3;
+        }
+        else
+        {
+            ret = false;
+            break;
+        }
+    }
+
+    return ret;
+}
+
 string ansi2utf8(const string& ansi) {
+    if (isUTF8(ansi.c_str(), ansi.length()))
+        return ansi;
+
     int len = MultiByteToWideChar(CP_ACP, 0, ansi.c_str(), ansi.length(), NULL, 0);
 
     WCHAR* lpszW = new WCHAR[len];
@@ -307,7 +361,8 @@ string ansi2utf8(const string& ansi) {
     int utf8_len = WideCharToMultiByte(CP_UTF8, 0, lpszW, len, NULL, 0, NULL, NULL);
     assert(utf8_len > 0);
 
-    char* utf8_string = new char[utf8_len];
+    char* utf8_string = new char[utf8_len + 1];
+    memset(utf8_string, 0, utf8_len + 1);
     assert(WideCharToMultiByte(CP_UTF8, 0, lpszW, len, utf8_string, utf8_len, NULL, NULL) == utf8_len);
 
     string ret(utf8_string);
@@ -319,15 +374,19 @@ string ansi2utf8(const string& ansi) {
 }
 
 string utf82ansi(const string& utf8) {
-    int len = MultiByteToWideChar(CP_UTF8, 0, (LPCTSTR)utf8.c_str(), utf8.length(), NULL, 0);
+    if (!isUTF8(utf8.c_str(), utf8.length()))
+        return utf8;
+
+    int len = MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), utf8.length(), NULL, 0);
 
     WCHAR* lpszW = new WCHAR[len];
-    assert(MultiByteToWideChar(CP_UTF8, 0, (LPCTSTR)utf8.c_str(), utf8.length(), lpszW, len) == len);
+    assert(MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), utf8.length(), lpszW, len) == len);
 
     int ansi_len = WideCharToMultiByte(CP_ACP, 0, lpszW, len, NULL, 0, NULL, NULL);
     assert(ansi_len > 0);
 
-    char* ansi_string = new char[ansi_len];
+    char* ansi_string = new char[ansi_len + 1];
+    memset(ansi_string, 0, ansi_len + 1);
     assert(WideCharToMultiByte(CP_ACP, 0, lpszW, len, ansi_string, ansi_len, NULL, NULL) == ansi_len);
 
     string ret(ansi_string);
