@@ -25,8 +25,10 @@ void DLL_EXPORT unzip(char* szipFilename, char* outputPath);
 }
 #endif
 
-extern "C" DLL_EXPORT BOOL APIENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
-    switch (fdwReason) {
+extern "C" DLL_EXPORT BOOL APIENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+{
+    switch (fdwReason)
+    {
         case DLL_PROCESS_ATTACH:
             break;
         case DLL_PROCESS_DETACH:
@@ -47,27 +49,32 @@ extern "C" void unzip(char* szipFilename, char* outputPath);
 
 #endif
 
-void zip(char* sourceDirOrFileName, char* outputFilename) {
+void zip(char* sourceDirOrFileName, char* outputFilename)
+{
     Szip::zip(sourceDirOrFileName, outputFilename);
 }
 
-void unzip(char* szipFilename, char* outputPath) {
+void unzip(char* szipFilename, char* outputPath)
+{
     Szip::unzip(szipFilename, outputPath);
 }
 
-int Szip::compressBytes(unsigned char* input, unsigned long len, vector<unsigned char>& output) {
+int Szip::compressBytes(unsigned char* input, unsigned long len, vector<unsigned char>& output)
+{
     unsigned long output_len = compressBound(len);
     unsigned char* buffer = new unsigned char[output_len];
 
     int result = compress(buffer, &output_len, input, len);
-    if (result != Z_OK) {
+    if (result != Z_OK)
+    {
         delete[] buffer;
 
         return result;
     }
 
     output.reserve(output_len);
-    for (unsigned long i = 0; i < output_len; i ++) {
+    for (unsigned long i = 0; i < output_len; i ++)
+    {
         output.push_back(buffer[i]);
     }
     delete[] buffer;
@@ -75,8 +82,10 @@ int Szip::compressBytes(unsigned char* input, unsigned long len, vector<unsigned
     return Z_OK;
 }
 
-int Szip::uncompressBytes(unsigned char* input, unsigned long len, vector<unsigned char>& output) {
-    if (len <= 0) {
+int Szip::uncompressBytes(unsigned char* input, unsigned long len, vector<unsigned char>& output)
+{
+    if (len <= 0)
+    {
         return 0;
     }
 
@@ -85,13 +94,15 @@ int Szip::uncompressBytes(unsigned char* input, unsigned long len, vector<unsign
 
     int result = uncompress(buffer, &output_len, input, len);
 
-    if (result == Z_DATA_ERROR) {
+    if (result == Z_DATA_ERROR)
+    {
         delete[] buffer;
 
         return result;
     }
 
-    while (result == Z_BUF_ERROR) {
+    while (result == Z_BUF_ERROR)
+    {
         output_len *= 10;
         delete[] buffer;
         buffer = new unsigned char[output_len];
@@ -99,14 +110,16 @@ int Szip::uncompressBytes(unsigned char* input, unsigned long len, vector<unsign
         result = uncompress(buffer, &output_len, input, len);
     }
 
-    if (result != Z_OK) {
+    if (result != Z_OK)
+    {
         delete[] buffer;
 
         return result;
     }
 
     output.reserve(output_len);
-    for (unsigned long i = 0; i < output_len; i ++) {
+    for (unsigned long i = 0; i < output_len; i ++)
+    {
         output.push_back(buffer[i]);
     }
     delete[] buffer;
@@ -114,22 +127,27 @@ int Szip::uncompressBytes(unsigned char* input, unsigned long len, vector<unsign
     return Z_OK;
 }
 
-void Szip::zip(const string& sourceDirOrFileName, const string& outputFilename) {
+void Szip::zip(const string& sourceDirOrFileName, const string& outputFilename)
+{
     assert(fileExists(sourceDirOrFileName));
     assert(outputFilename != "");
 
     unsigned char const magic[] = { 12, 29 };
     vector<unsigned char> buffer;
 
-    if (isFile(sourceDirOrFileName)) {
+    if (isFile(sourceDirOrFileName))
+    {
         put(PUT_FILE_T, sourceDirOrFileName, buffer);
-    } else {
+    }
+    else
+    {
         readFile(sourceDirOrFileName, "", buffer);
     }
 
     vector<unsigned char> compressed;
     int len = compressBytes(buffer.data(), buffer.size(), compressed);
-    if (len != Z_OK) {
+    if (len != Z_OK)
+    {
         assert(false);
     }
 
@@ -141,7 +159,8 @@ void Szip::zip(const string& sourceDirOrFileName, const string& outputFilename) 
     os.close();
 }
 
-void Szip::unzip(const string& szipFilename, const string& outputPath) {
+void Szip::unzip(const string& szipFilename, const string& outputPath)
+{
     assert(fileExists(szipFilename));
     int len = fileLength(szipFilename);
     assert(len > 2);
@@ -155,19 +174,22 @@ void Szip::unzip(const string& szipFilename, const string& outputPath) {
 
     vector<unsigned char> buffer;
     len = uncompressBytes(data + 2, len - 2, buffer);
-    if (len != Z_OK) {
+    if (len != Z_OK)
+    {
         assert(false);
     }
 
     if (!fileExists(outputPath))   createDirectories(outputPath);
 
-    if (buffer.size() == 0) {
+    if (buffer.size() == 0)
+    {
         return;
     }
 
     string dir = outputPath;
     size_t pos = 0;
-    while (pos < buffer.size()) {
+    while (pos < buffer.size())
+    {
         unsigned char type = buffer[pos++];
         unsigned short len = szip::Bytes::peek<unsigned short>(buffer.data(), pos);
         pos += 2;
@@ -179,17 +201,21 @@ void Szip::unzip(const string& szipFilename, const string& outputPath) {
 
         pos += len;
 
-        if (type == 0x01) {
+        if (type == 0x01)
+        {
             dir = buildPath(outputPath, name);
             if (!fileExists(dir))  createDirectories(dir);
-        } else {
+        }
+        else
+        {
             string filename = buildPath(dir, name);
             unsigned int file_len = szip::Bytes::peek<unsigned int>(buffer.data(), pos);
             pos += 4;
 
             ofstream fout;
             fout.open(filename, ios::binary);
-            for (unsigned int i = 0; i < file_len; i++) {
+            for (unsigned int i = 0; i < file_len; i++)
+            {
                 fout << buffer[i + pos];
             }
             fout << flush;
@@ -201,23 +227,27 @@ void Szip::unzip(const string& szipFilename, const string& outputPath) {
 
 // private:
 
-void Szip::readFile(const string& dir, const string& rootDir, vector<unsigned char>& buffer) {
+void Szip::readFile(const string& dir, const string& rootDir, vector<unsigned char>& buffer)
+{
     vector<string> files;
     getFiles(dir, files);
-    for (size_t i = 0; i < files.size(); i++) {
-    	put(PUT_FILE_T, files[i], buffer);
+    for (size_t i = 0; i < files.size(); i++)
+    {
+    	    put(PUT_FILE_T, files[i], buffer);
     }
 
     vector<string> dirs;
     getDirs(dir, dirs);
-    for (size_t i = 0; i < dirs.size(); i++) {
+    for (size_t i = 0; i < dirs.size(); i++)
+    {
         string t = buildPath(rootDir, baseName(dirs[i]));
         put(PUT_DIR_T, t, buffer);
         readFile(dirs[i], t, buffer);
     }
 }
 
-void Szip::put(int type, const string& name, vector<unsigned char>& buffer) {
+void Szip::put(int type, const string& name, vector<unsigned char>& buffer)
+{
     assert(type == PUT_DIR_T || type == PUT_FILE_T);
 
     buffer.push_back((unsigned char)type);
@@ -228,11 +258,13 @@ void Szip::put(int type, const string& name, vector<unsigned char>& buffer) {
 #endif
     szip::Bytes::write<unsigned short>((unsigned short)t.length(), buffer, -1);
 
-    for (size_t i = 0; i < t.length(); i++) {
+    for (size_t i = 0; i < t.length(); i++)
+    {
         buffer.push_back(t[i]);
     }
 
-    if (type == PUT_FILE_T) {
+    if (type == PUT_FILE_T)
+    {
         ifstream is;
         is.open(name, ios::binary);
         is.seekg(0, ios::end);
@@ -242,7 +274,8 @@ void Szip::put(int type, const string& name, vector<unsigned char>& buffer) {
         is.read(content, len);
         is.close();
         szip::Bytes::write<unsigned int>((unsigned int)len, buffer, -1);
-        for (int i = 0; i < len; i++) {
+        for (int i = 0; i < len; i++)
+        {
             buffer.push_back(content[i]);
         }
         delete[] content;

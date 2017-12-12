@@ -25,11 +25,13 @@
 
 #include "filesystem.h"
 
-bool fileExists(const string& filename) {
+bool fileExists(const string& filename)
+{
     return (access(filename.c_str(), F_OK) != -1);
 }
 
-unsigned int fileLength(const string& filename) {
+unsigned int fileLength(const string& filename)
+{
     ifstream is;
     is.open(filename, ios::binary);
     is.seekg(0, ios::end);
@@ -39,7 +41,8 @@ unsigned int fileLength(const string& filename) {
     return len;
 }
 
-int createDirectories(const string& path) {
+int createDirectories(const string& path)
+{
     string dir = path;
     if (dir[dir.length() - 1] != '\\' || dir[dir.length() - 1] != '/')
         dir += "/";
@@ -47,17 +50,21 @@ int createDirectories(const string& path) {
     int len = dir.length();
     char tmp[256] = { 0 };
 
-    for (int i = 0; i < len; ++i) {
+    for (int i = 0; i < len; ++i)
+    {
         tmp[i] = dir[i];
 
-        if (tmp[i] == '\\' || tmp[i] == '/') {
-            if (!fileExists(tmp)) {
+        if (tmp[i] == '\\' || tmp[i] == '/')
+        {
+            if (!fileExists(tmp))
+            {
 #ifdef _WIN32
                 int ret = _mkdir(tmp);
 #else
                 int ret = mkdir(tmp, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 #endif
-                if (ret != 0) {
+                if (ret != 0)
+                {
                     return ret;
                 }
             }
@@ -67,32 +74,39 @@ int createDirectories(const string& path) {
     return 0;
 }
 
-string buildPath(const string& root, const string& subPath) {
-    if (root.empty() || subPath.empty()) {
+string buildPath(const string& root, const string& subPath)
+{
+    if (root.empty() || subPath.empty())
+    {
         return root + subPath;
     }
 
-    if (root[root.length() - 1] == '\\' || root[root.length() - 1] == '/' || subPath[0] == '\\' || subPath[0] == '/') {
+    if (root[root.length() - 1] == '\\' || root[root.length() - 1] == '/' || subPath[0] == '\\' || subPath[0] == '/')
+    {
         return root + subPath;
     }
 
     return root + "/" + subPath;
 }
 
-string baseName(const string& path) {
+string baseName(const string& path)
+{
 #ifdef _WIN32
-    if (path.length() == 0 || path == "\\" || path == "/") {
+    if (path.length() == 0 || path == "\\" || path == "/")
+    {
         return "";
     }
 
     char* t = strdup(path.c_str());
-    if (t[strlen(t) - 1] == '\\' || t[strlen(t) - 1] == '/') {
+    if (t[strlen(t) - 1] == '\\' || t[strlen(t) - 1] == '/')
+    {
         t[strlen(t) - 1] = '\0';
     }
 
     int i = strlen(t);
     while (--i >= 0) {
-        if (t[i] == '\\' || t[i] == '/') {
+        if (t[i] == '\\' || t[i] == '/')
+        {
             break;
         }
     }
@@ -126,65 +140,78 @@ string dirName(const string& path)
 #endif
 }
 
-bool isDir(const string& name) {
+bool isDir(const string& name)
+{
     struct stat buf = { 0 };
     stat(name.c_str(), &buf);
     return buf.st_mode & S_IFDIR;
 }
 
-bool isFile(const string& name) {
+bool isFile(const string& name)
+{
     struct stat buf = { 0 };
     stat(name.c_str(), &buf);
     return buf.st_mode & S_IFREG;
 }
 
-void getFiles(const string& path, vector<string>& files) {
+void getFiles(const string& path, vector<string>& files)
+{
 #ifdef _WIN32
     intptr_t handle;
     _finddata_t fileinfo;
 
     string dir = path;
-    if (dir[dir.length() - 1] != '\\' || dir[dir.length() - 1] != '/') {
+    if (dir[dir.length() - 1] != '\\' || dir[dir.length() - 1] != '/')
+    {
         dir += "/";
     }
     dir += "*.*";
 
     handle = _findfirst(dir.c_str(), &fileinfo);
-    if (handle == -1) {
+    if (handle == -1)
+    {
         return;
     }
 
     do {
-        if (!(fileinfo.attrib & _A_SUBDIR)) {
+        if (!(fileinfo.attrib & _A_SUBDIR))
+        {
             files.push_back(buildPath(path, fileinfo.name));
         }
-    } while (_findnext(handle, &fileinfo) == 0);
+    }
+    while (_findnext(handle, &fileinfo) == 0);
 
     _findclose(handle);
 #else
     DIR* dir;
-    if (!(dir = opendir(path.c_str()))) {
+    if (!(dir = opendir(path.c_str())))
+    {
         assert(false);
     }
 
     struct dirent* d_ent;
     string temppath = path;
-    if (temppath[temppath.length() - 1] != '\\' || temppath[temppath.length() - 1] != '/') {
+    if (temppath[temppath.length() - 1] != '\\' || temppath[temppath.length() - 1] != '/')
+    {
         temppath += "/";
     }
 
-    while ((d_ent = readdir(dir)) != NULL) {
+    while ((d_ent = readdir(dir)) != NULL)
+    {
         struct stat file_stat;
-        if (strncmp(d_ent->d_name, ".", 1) == 0 || strncmp(d_ent->d_name, "..", 2) == 0) {
+        if (strncmp(d_ent->d_name, ".", 1) == 0 || strncmp(d_ent->d_name, "..", 2) == 0)
+        {
             continue;
         }
 
         string name = temppath + d_ent->d_name;
-        if (lstat(name.c_str(), &file_stat) < 0) {
+        if (lstat(name.c_str(), &file_stat) < 0)
+        {
             assert(false);
         }
 
-        if (!S_ISDIR(file_stat.st_mode)) {
+        if (!S_ISDIR(file_stat.st_mode))
+        {
             files.push_back(name);
         }
     }
@@ -193,55 +220,68 @@ void getFiles(const string& path, vector<string>& files) {
 #endif
 }
 
-void getDirs(const string& path, vector<string>& dirs) {
+void getDirs(const string& path, vector<string>& dirs)
+{
 #ifdef _WIN32
     intptr_t handle;
     _finddata_t fileinfo;
 
     string dir = path;
-    if (dir[dir.length() - 1] != '\\' || dir[dir.length() - 1] != '/') {
+    if (dir[dir.length() - 1] != '\\' || dir[dir.length() - 1] != '/')
+    {
         dir += "/";
     }
     dir += "*.*";
 
     handle = _findfirst(dir.c_str(), &fileinfo);
-    if (handle == -1) {
+    if (handle == -1)
+    {
         return;
     }
 
-    do {
-        if (fileinfo.attrib & _A_SUBDIR) {
-            if (strcmp(fileinfo.name, ".") && strcmp(fileinfo.name, "..")) {
+    do
+    {
+        if (fileinfo.attrib & _A_SUBDIR)
+        {
+            if (strcmp(fileinfo.name, ".") && strcmp(fileinfo.name, ".."))
+            {
                 dirs.push_back(buildPath(path, fileinfo.name));
             }
         }
-    } while (_findnext(handle, &fileinfo) == 0);
+    }
+    while (_findnext(handle, &fileinfo) == 0);
 
     _findclose(handle);
 #else
     DIR* dir;
-    if (!(dir = opendir(path.c_str()))) {
+    if (!(dir = opendir(path.c_str())))
+    {
         assert(false);
     }
 
     struct dirent* d_ent;
     string temppath = path;
-    if (temppath[temppath.length() - 1] != '\\' || temppath[temppath.length() - 1] != '/') {
+    if (temppath[temppath.length() - 1] != '\\' || temppath[temppath.length() - 1] != '/')
+    {
         temppath += "/";
     }
 
-    while ((d_ent = readdir(dir)) != NULL) {
+    while ((d_ent = readdir(dir)) != NULL)
+    {
         struct stat file_stat;
-        if (strncmp(d_ent->d_name, ".", 1) == 0 || strncmp(d_ent->d_name, "..", 2) == 0) {
+        if (strncmp(d_ent->d_name, ".", 1) == 0 || strncmp(d_ent->d_name, "..", 2) == 0)
+        {
             continue;
         }
 
         string name = temppath + d_ent->d_name;
-        if (lstat(name.c_str(), &file_stat) < 0) {
+        if (lstat(name.c_str(), &file_stat) < 0)
+        {
             assert(false);
         }
 
-        if (S_ISDIR(file_stat.st_mode)) {
+        if (S_ISDIR(file_stat.st_mode))
+        {
             dirs.push_back(name);
         }
     }
@@ -349,7 +389,8 @@ bool isUTF8(const void* pBuffer, long size)
     return ret;
 }
 
-string ansi2utf8(const string& ansi) {
+string ansi2utf8(const string& ansi)
+{
     if (isUTF8(ansi.c_str(), ansi.length()))
         return ansi;
 
@@ -373,7 +414,8 @@ string ansi2utf8(const string& ansi) {
     return ret;
 }
 
-string utf82ansi(const string& utf8) {
+string utf82ansi(const string& utf8)
+{
     if (!isUTF8(utf8.c_str(), utf8.length()))
         return utf8;
 

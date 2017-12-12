@@ -4,23 +4,29 @@
 
 using namespace std;
 
-namespace szip {
+namespace szip
+{
 
-class Bytes {
+class Bytes
+{
 public:
     template <typename T>
-    static unsigned int write(const T& value, vector<unsigned char>& buffer, int offset) {
-        if (offset < 0) {
+    static unsigned int write(const T& value, vector<unsigned char>& buffer, int offset)
+    {
+        if (offset < 0)
+        {
             offset = buffer.size();
         }
-        while (buffer.size() < offset + sizeof(T)) {
+        while (buffer.size() < offset + sizeof(T))
+        {
             buffer.push_back((unsigned char)0);
         }
 
         unsigned char* p = (unsigned char*)&value;
 
         unsigned int i = 0;
-        while (i < sizeof(T)) {
+        while (i < sizeof(T))
+        {
             buffer[offset + sizeof(T) - i - 1] = p[i];
             i++;
         }
@@ -29,8 +35,10 @@ public:
     }
 
     template <typename T>
-    static T peek(unsigned char* buffer, int offset) {
-        if (offset < 0) {
+    static T peek(unsigned char* buffer, int offset)
+    {
+        if (offset < 0)
+        {
             offset = 0;
         }
 
@@ -38,7 +46,8 @@ public:
         unsigned char* p = (unsigned char*)&t;
 
         unsigned int i = 0;
-        while (i < sizeof(T)) {
+        while (i < sizeof(T))
+        {
             p[i] = buffer[offset + sizeof(T) - i - 1];
             i++;
         }
