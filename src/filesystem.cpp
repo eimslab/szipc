@@ -74,6 +74,21 @@ int createDirectories(const string& path)
     return 0;
 }
 
+int removeDirectory(const string& path)
+{
+#ifdef _WIN32
+    int ret = _rmdir(path.c_str());
+#else
+    int ret = rmdir(path.c_str());
+#endif
+    if (ret != 0)
+    {
+        return ret;
+    }
+
+    return 0;
+}
+
 string buildPath(const string& root, const string& subPath)
 {
     if (root.empty() || subPath.empty())

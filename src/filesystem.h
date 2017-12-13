@@ -8,6 +8,7 @@ using namespace std;
 bool            fileExists(const string& filename);
 unsigned int    fileLength(const string& filename);
 int             createDirectories(const string& path);
+int             removeDirectory(const string& path);
 string          buildPath(const string& root, const string& subPath);
 string          baseName(const string& path);
 string          dirName(const string& path);
