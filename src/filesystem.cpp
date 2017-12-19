@@ -5,6 +5,7 @@
 #include <libgen.h>
 #include <cstring>
 #include <sys/stat.h>
+#include <iterator>
 
 #ifdef _WIN32
     #include <direct.h>
@@ -41,6 +42,17 @@ unsigned int fileLength(const string& filename)
     return len;
 }
 
+int createDirectory(const string& path)
+{
+#ifdef _WIN32
+    int ret = _mkdir(path.c_str());
+#else
+    int ret = mkdir(path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+#endif
+
+    return ret;
+}
+
 int createDirectories(const string& path)
 {
     string dir = path;
@@ -58,11 +70,8 @@ int createDirectories(const string& path)
         {
             if (!fileExists(tmp))
             {
-#ifdef _WIN32
-                int ret = _mkdir(tmp);
-#else
-                int ret = mkdir(tmp, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-#endif
+                int ret = createDirectory(tmp);
+
                 if (ret != 0)
                 {
                     return ret;
@@ -87,6 +96,41 @@ int removeDirectory(const string& path)
     }
 
     return 0;
+}
+
+void copyFile(const string& src, const string& dst)
+{
+    ifstream ifs(src, ios::binary);
+    ofstream ofs(dst, ios::binary);
+    ofs << ifs.rdbuf();
+}
+
+void copyDirectory(const string& src, const string& dst)
+{
+    assert(fileExists(src) && isDir(src));
+    assert(!fileExists(dst) || isDir(dst));
+
+    // removeDirectory(dst);
+    if (!fileExists(dst))
+    {
+        createDirectory(dst);
+    }
+
+    vector<string> files;
+    getFiles(src, files);
+    for (size_t i = 0; i < files.size(); i++)
+    {
+        string name = buildPath(dst, baseName(files[i]));
+        copyFile(files[i], name);
+    }
+
+    vector<string> dirs;
+    getDirs(src, dirs);
+    for (size_t i = 0; i < dirs.size(); i++)
+    {
+        string name = buildPath(dst, baseName(dirs[i]));
+        copyDirectory(dirs[i], name);
+    }
 }
 
 string buildPath(const string& root, const string& subPath)
@@ -119,7 +163,8 @@ string baseName(const string& path)
     }
 
     int i = strlen(t);
-    while (--i >= 0) {
+    while (--i >= 0)
+    {
         if (t[i] == '\\' || t[i] == '/')
         {
             break;
@@ -188,7 +233,8 @@ void getFiles(const string& path, vector<string>& files)
         return;
     }
 
-    do {
+    do
+    {
         if (!(fileinfo.attrib & _A_SUBDIR))
         {
             files.push_back(buildPath(path, fileinfo.name));
@@ -211,8 +257,7 @@ void getFiles(const string& path, vector<string>& files)
         temppath += "/";
     }
 
-    while ((d_ent = readdir(dir)) != NULL)
-    {
+    while ((d_ent = readdir(dir)) != NULL) {
         struct stat file_stat;
         if (strncmp(d_ent->d_name, ".", 1) == 0 || strncmp(d_ent->d_name, "..", 2) == 0)
         {
@@ -254,8 +299,7 @@ void getDirs(const string& path, vector<string>& dirs)
         return;
     }
 
-    do
-    {
+    do {
         if (fileinfo.attrib & _A_SUBDIR)
         {
             if (strcmp(fileinfo.name, ".") && strcmp(fileinfo.name, ".."))
