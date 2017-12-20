@@ -9,9 +9,15 @@
 #include "bytes.h"
 #include "filesystem.h"
 
+#ifdef _MSC_VER
+    #pragma comment(lib, "zlib.lib")
+#endif
 
 #ifdef _WIN32
 
+#ifndef WIN32_LEAN_AND_MEAN
+    #define WIN32_LEAN_AND_MEAN
+#endif
 #include <windows.h>
 
 #define DLL_EXPORT __declspec(dllexport) __stdcall
@@ -145,7 +151,7 @@ void Szip::zip(const string& sourceDirOrFileName, const string& outputFilename)
     }
 
     vector<unsigned char> compressed;
-    int len = compressBytes(buffer.data(), buffer.size(), compressed);
+    int len = compressBytes(buffer.data(), (unsigned long)buffer.size(), compressed);
     if (len != Z_OK)
     {
         assert(false);
@@ -162,7 +168,7 @@ void Szip::zip(const string& sourceDirOrFileName, const string& outputFilename)
 void Szip::unzip(const string& szipFilename, const string& outputPath)
 {
     assert(fileExists(szipFilename));
-    int len = fileLength(szipFilename);
+    int len = (int)fileLength(szipFilename);
     assert(len > 2);
 
     unsigned char const magic[] = { 12, 29 };
@@ -191,7 +197,7 @@ void Szip::unzip(const string& szipFilename, const string& outputPath)
     while (pos < buffer.size())
     {
         unsigned char type = buffer[pos++];
-        unsigned short len = szip::Bytes::peek<unsigned short>(buffer.data(), pos);
+        unsigned short len = szip::Bytes::peek<unsigned short>(buffer.data(), (int)pos);
         pos += 2;
 #ifdef _WIN32
         string name = utf82ansi(string((char*)buffer.data() + pos, 0, len));
@@ -209,7 +215,7 @@ void Szip::unzip(const string& szipFilename, const string& outputPath)
         else
         {
             string filename = buildPath(dir, name);
-            unsigned int file_len = szip::Bytes::peek<unsigned int>(buffer.data(), pos);
+            unsigned int file_len = szip::Bytes::peek<unsigned int>(buffer.data(), (int)pos);
             pos += 4;
 
             ofstream fout;
@@ -268,7 +274,7 @@ void Szip::put(int type, const string& name, vector<unsigned char>& buffer)
         ifstream is;
         is.open(name, ios::binary);
         is.seekg(0, ios::end);
-        int len = is.tellg();
+        int len = (int)is.tellg();
         is.seekg(0, ios::beg);
         char* content = new char[len];
         is.read(content, len);

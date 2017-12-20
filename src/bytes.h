@@ -15,7 +15,7 @@ public:
     {
         if (offset < 0)
         {
-            offset = buffer.size();
+            offset = (int)buffer.size();
         }
         while (buffer.size() < offset + sizeof(T))
         {

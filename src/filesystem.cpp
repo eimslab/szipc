@@ -2,7 +2,6 @@
 #include <iostream>
 #include <fstream>
 #include <cstdint>
-#include <libgen.h>
 #include <cstring>
 #include <sys/stat.h>
 #include <iterator>
@@ -10,8 +9,12 @@
 #ifdef _WIN32
     #include <direct.h>
     #include <io.h>
+    #ifndef WIN32_LEAN_AND_MEAN
+        #define WIN32_LEAN_AND_MEAN
+    #endif
     #include <windows.h>
 #else
+    #include <libgen.h>
     #include <sys/types.h>
     #include <dirent.h>
     #include <unistd.h>
@@ -28,15 +31,19 @@
 
 bool fileExists(const string& filename)
 {
+#ifdef _MSC_VER
+    return (_access(filename.c_str(), 0) != -1);
+#else
     return (access(filename.c_str(), F_OK) != -1);
+#endif
 }
 
-unsigned int fileLength(const string& filename)
+unsigned long long fileLength(const string& filename)
 {
     ifstream is;
     is.open(filename, ios::binary);
     is.seekg(0, ios::end);
-    int len = is.tellg();
+    unsigned long long len = (unsigned long long)is.tellg();
     is.close();
 
     return len;
@@ -156,7 +163,11 @@ string baseName(const string& path)
         return "";
     }
 
+#ifdef _MSC_VER
+    char* t = _strdup(path.c_str());
+#else
     char* t = strdup(path.c_str());
+#endif
     if (t[strlen(t) - 1] == '\\' || t[strlen(t) - 1] == '/')
     {
         t[strlen(t) - 1] = '\0';
@@ -182,7 +193,12 @@ string baseName(const string& path)
 string dirName(const string& path)
 {
 #ifdef _WIN32
+
+#ifdef _MSC_VER
+    char* temp = _strdup(path.c_str());
+#else
     char* temp = strdup(path.c_str());
+#endif
 
     for (int i = path.length(); i > 0; i--)
     {
@@ -204,14 +220,14 @@ bool isDir(const string& name)
 {
     struct stat buf = { 0 };
     stat(name.c_str(), &buf);
-    return buf.st_mode & S_IFDIR;
+    return ((buf.st_mode & S_IFDIR) != 0);
 }
 
 bool isFile(const string& name)
 {
     struct stat buf = { 0 };
     stat(name.c_str(), &buf);
-    return buf.st_mode & S_IFREG;
+    return ((buf.st_mode & S_IFREG) != 0);
 }
 
 void getFiles(const string& path, vector<string>& files)
