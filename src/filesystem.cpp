@@ -66,7 +66,7 @@ int createDirectories(const string& path)
     if (dir[dir.length() - 1] != '\\' || dir[dir.length() - 1] != '/')
         dir += "/";
 
-    int len = dir.length();
+    int len = (int)dir.length();
     char tmp[256] = { 0 };
 
     for (int i = 0; i < len; ++i)
@@ -173,7 +173,7 @@ string baseName(const string& path)
         t[strlen(t) - 1] = '\0';
     }
 
-    int i = strlen(t);
+    size_t i = strlen(t);
     while (--i >= 0)
     {
         if (t[i] == '\\' || t[i] == '/')
@@ -200,7 +200,7 @@ string dirName(const string& path)
     char* temp = strdup(path.c_str());
 #endif
 
-    for (int i = path.length(); i > 0; i--)
+    for (size_t i = path.length(); i > 0; i--)
     {
        if (temp[i] == '/' || temp[i]=='\\')
        {
@@ -366,6 +366,17 @@ void getDirs(const string& path, vector<string>& dirs)
 }
 
 #ifdef _WIN32
+#ifdef _MSC_VER
+string thisExePath()
+{
+    TCHAR path[1024];
+    memset(path, '\0', 1024);
+
+    GetModuleFileName(NULL, path, 1024);
+
+    return ansi2utf8(path);
+}
+#else
 string thisExePath()
 {
     char path[1024];
@@ -376,6 +387,7 @@ string thisExePath()
     string ret = path;
     return ret;
 }
+#endif
 #endif
 #ifdef __linux
 string thisExePath()
@@ -466,13 +478,13 @@ bool isUTF8(const void* pBuffer, long size)
 
 string ansi2utf8(const string& ansi)
 {
-    if (isUTF8(ansi.c_str(), ansi.length()))
+    if (isUTF8(ansi.c_str(), (long)ansi.length()))
         return ansi;
 
-    int len = MultiByteToWideChar(CP_ACP, 0, ansi.c_str(), ansi.length(), NULL, 0);
+    int len = MultiByteToWideChar(CP_ACP, 0, ansi.c_str(), (int)ansi.length(), NULL, 0);
 
     WCHAR* lpszW = new WCHAR[len];
-    assert(MultiByteToWideChar(CP_ACP, 0, ansi.c_str(), ansi.length(), lpszW, len) == len);
+    assert(MultiByteToWideChar(CP_ACP, 0, ansi.c_str(), (int)ansi.length(), lpszW, len) == len);
 
     int utf8_len = WideCharToMultiByte(CP_UTF8, 0, lpszW, len, NULL, 0, NULL, NULL);
     assert(utf8_len > 0);
@@ -491,13 +503,13 @@ string ansi2utf8(const string& ansi)
 
 string utf82ansi(const string& utf8)
 {
-    if (!isUTF8(utf8.c_str(), utf8.length()))
+    if (!isUTF8(utf8.c_str(), (long)utf8.length()))
         return utf8;
 
-    int len = MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), utf8.length(), NULL, 0);
+    int len = MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), (int)utf8.length(), NULL, 0);
 
     WCHAR* lpszW = new WCHAR[len];
-    assert(MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), utf8.length(), lpszW, len) == len);
+    assert(MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), (int)utf8.length(), lpszW, len) == len);
 
     int ansi_len = WideCharToMultiByte(CP_ACP, 0, lpszW, len, NULL, 0, NULL, NULL);
     assert(ansi_len > 0);
