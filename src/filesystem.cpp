@@ -374,7 +374,16 @@ string thisExePath()
 
     GetModuleFileName(NULL, path, 1024);
 
-    return ansi2utf8(path);
+#ifdef UNICODE
+    int len = WideCharToMultiByte(CP_ACP, 0, path, -1, NULL, 0, NULL, NULL);
+    char* ansi = new char[len + 1];
+    memset(ansi, 0, len + 1);
+    WideCharToMultiByte(CP_ACP, 0, path, -1, ansi, len, NULL, NULL);
+    string ret(ansi);
+#else
+    string ret(path);
+#endif
+    return ret;
 }
 #else
 string thisExePath()
@@ -384,7 +393,7 @@ string thisExePath()
 
     GetModuleFileName(NULL, path, 1024);
 
-    string ret = path;
+    string ret(path);
     return ret;
 }
 #endif
@@ -395,7 +404,7 @@ string thisExePath()
     char path[1024];
     memset(path, '\0', 1024);
 
-    int len = readlink ("/proc/self/exe", path , 1024);
+    int len = readlink("/proc/self/exe", path , 1024);
     if (len > 1024 || len < 0)
     {
         return  "";
