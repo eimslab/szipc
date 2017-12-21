@@ -68,7 +68,7 @@ void unzip(char* szipFilename, char* outputPath)
 
 int Szip::compressBytes(unsigned char* input, size_t len, vector<unsigned char>& output)
 {
-    size_t output_len = compressBound(len);
+    unsigned long output_len = compressBound(len);
     unsigned char* buffer = new unsigned char[output_len];
 
     int result = compress(buffer, &output_len, input, len);
@@ -96,7 +96,7 @@ int Szip::uncompressBytes(unsigned char* input, size_t len, vector<unsigned char
         return 0;
     }
 
-    size_t output_len = len * 10;
+    unsigned long output_len = len * 10;
     unsigned char* buffer = new unsigned char[output_len];
 
     int result = uncompress(buffer, &output_len, input, len);
