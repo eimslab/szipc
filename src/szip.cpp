@@ -5,9 +5,10 @@
 // link flag: -lz
 #include <zlib.h>
 
-#include "szip.h"
 #include "bytes.h"
 #include "filesystem.h"
+
+#include "szip.h"
 
 #ifdef _MSC_VER
     #pragma comment(lib, "zlib.lib")
