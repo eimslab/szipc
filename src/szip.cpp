@@ -65,9 +65,9 @@ void unzip(char* szipFilename, char* outputPath)
     Szip::unzip(szipFilename, outputPath);
 }
 
-int Szip::compressBytes(unsigned char* input, unsigned long len, vector<unsigned char>& output)
+int Szip::compressBytes(unsigned char* input, size_t len, vector<unsigned char>& output)
 {
-    unsigned long output_len = compressBound(len);
+    size_t output_len = compressBound(len);
     unsigned char* buffer = new unsigned char[output_len];
 
     int result = compress(buffer, &output_len, input, len);
@@ -79,7 +79,7 @@ int Szip::compressBytes(unsigned char* input, unsigned long len, vector<unsigned
     }
 
     output.reserve(output_len);
-    for (unsigned long i = 0; i < output_len; i ++)
+    for (size_t i = 0; i < output_len; i ++)
     {
         output.push_back(buffer[i]);
     }
@@ -88,14 +88,14 @@ int Szip::compressBytes(unsigned char* input, unsigned long len, vector<unsigned
     return Z_OK;
 }
 
-int Szip::uncompressBytes(unsigned char* input, unsigned long len, vector<unsigned char>& output)
+int Szip::uncompressBytes(unsigned char* input, size_t len, vector<unsigned char>& output)
 {
     if (len <= 0)
     {
         return 0;
     }
 
-    unsigned long output_len = len * 100;
+    size_t output_len = len * 10;
     unsigned char* buffer = new unsigned char[output_len];
 
     int result = uncompress(buffer, &output_len, input, len);
@@ -124,7 +124,7 @@ int Szip::uncompressBytes(unsigned char* input, unsigned long len, vector<unsign
     }
 
     output.reserve(output_len);
-    for (unsigned long i = 0; i < output_len; i ++)
+    for (size_t i = 0; i < output_len; i ++)
     {
         output.push_back(buffer[i]);
     }
@@ -168,7 +168,7 @@ void Szip::zip(const string& sourceDirOrFileName, const string& outputFilename)
 void Szip::unzip(const string& szipFilename, const string& outputPath)
 {
     assert(fileExists(szipFilename));
-    int len = (int)fileLength(szipFilename);
+    size_t len = fileLength(szipFilename);
     assert(len > 2);
 
     unsigned char const magic[] = { 12, 29 };
@@ -179,13 +179,16 @@ void Szip::unzip(const string& szipFilename, const string& outputPath)
     assert(data[0] == magic[0] && data[1] == magic[1]);
 
     vector<unsigned char> buffer;
-    len = uncompressBytes(data + 2, len - 2, buffer);
-    if (len != Z_OK)
+    int ret = uncompressBytes(data + 2, len - 2, buffer);
+    if (ret != Z_OK)
     {
         assert(false);
     }
 
-    if (!fileExists(outputPath))   createDirectories(outputPath);
+    if (!fileExists(outputPath))
+    {
+        createDirectories(outputPath);
+    }
 
     if (buffer.size() == 0)
     {

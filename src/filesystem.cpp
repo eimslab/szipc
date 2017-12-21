@@ -38,12 +38,12 @@ bool fileExists(const string& filename)
 #endif
 }
 
-unsigned long long fileLength(const string& filename)
+size_t fileLength(const string& filename)
 {
     ifstream is;
     is.open(filename, ios::binary);
     is.seekg(0, ios::end);
-    unsigned long long len = (unsigned long long)is.tellg();
+    size_t len = is.tellg();
     is.close();
 
     return len;
@@ -117,7 +117,6 @@ void copyDirectory(const string& src, const string& dst)
     assert(fileExists(src) && isDir(src));
     assert(!fileExists(dst) || isDir(dst));
 
-    // removeDirectory(dst);
     if (!fileExists(dst))
     {
         createDirectory(dst);
@@ -434,11 +433,11 @@ string thisExePath()
 #endif
 
 #ifdef _WIN32
-bool isUTF8(const void* pBuffer, long size)
+bool isUtf8(const void* data, size_t size)
 {
     bool ret = true;
-    unsigned char* start = (unsigned char*)pBuffer;
-    unsigned char* end = (unsigned char*)pBuffer + size;
+    unsigned char* start = (unsigned char*)data;
+    unsigned char* end = (unsigned char*)data + size;
 
     while (start < end)
     {

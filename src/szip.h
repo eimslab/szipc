@@ -11,8 +11,8 @@ using namespace std;
 class Szip
 {
 public:
-    static int compressBytes  (unsigned char* input, unsigned long len, vector<unsigned char>& output);
-    static int uncompressBytes(unsigned char* input, unsigned long len, vector<unsigned char>& output);
+    static int compressBytes  (unsigned char* input, size_t len, vector<unsigned char>& output);
+    static int uncompressBytes(unsigned char* input, size_t len, vector<unsigned char>& output);
     static void zip           (const string& sourceDirOrFileName, const string& outputFilename);
     static void unzip         (const string& szipFilename, const string& outputPath);
 
