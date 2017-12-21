@@ -486,7 +486,7 @@ bool isUtf8(const void* data, size_t size)
 
 string ansi2utf8(const string& ansi)
 {
-    if (isUTF8(ansi.c_str(), (long)ansi.length()))
+    if (isUtf8(ansi.c_str(), (long)ansi.length()))
         return ansi;
 
     int len = MultiByteToWideChar(CP_ACP, 0, ansi.c_str(), (int)ansi.length(), NULL, 0);
@@ -511,7 +511,7 @@ string ansi2utf8(const string& ansi)
 
 string utf82ansi(const string& utf8)
 {
-    if (!isUTF8(utf8.c_str(), (long)utf8.length()))
+    if (!isUtf8(utf8.c_str(), (long)utf8.length()))
         return utf8;
 
     int len = MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), (int)utf8.length(), NULL, 0);
