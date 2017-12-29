@@ -379,6 +379,7 @@ string thisExePath()
     memset(ansi, 0, len + 1);
     WideCharToMultiByte(CP_ACP, 0, path, -1, ansi, len, NULL, NULL);
     string ret(ansi);
+    delete[] ansi;
 #else
     string ret(path);
 #endif

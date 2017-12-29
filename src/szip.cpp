@@ -181,6 +181,8 @@ void Szip::unzip(const string& szipFilename, const string& outputPath)
 
     vector<unsigned char> buffer;
     int ret = uncompressBytes(data + 2, len - 2, buffer);
+    delete[] data;
+
     if (ret != Z_OK)
     {
         assert(false);
