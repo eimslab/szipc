@@ -206,9 +206,9 @@ void Szip::unzip(const string& szipFilename, const string& outputPath)
         unsigned short len = szip::Bytes::peek<unsigned short>(buffer.data(), pos);
         pos += 2;
 #ifdef _WIN32
-        string name = utf82ansi(string((char*)buffer.data() + pos, 0, len));
+        string name = utf82ansi(string((char*)buffer.data() + pos, len));
 #else
-        string name((char*)buffer.data() + pos, 0, len);
+        string name((char*)buffer.data() + pos, len);
 #endif
 
         pos += len;
