@@ -58,12 +58,26 @@ extern "C" void unzip(char* szipFilename, char* outputPath);
 
 void zip(char* sourceDirOrFileName, char* outputFilename)
 {
-    Szip::zip(sourceDirOrFileName, outputFilename);
+    try
+    {
+        Szip::zip(sourceDirOrFileName, outputFilename);
+    }
+    catch (...)
+    {
+
+    }
 }
 
 void unzip(char* szipFilename, char* outputPath)
 {
-    Szip::unzip(szipFilename, outputPath);
+    try
+    {
+        Szip::unzip(szipFilename, outputPath);
+    }
+    catch (...)
+    {
+
+    }
 }
 
 int Szip::compressBytes(unsigned char* input, size_t len, vector<unsigned char>& output)
