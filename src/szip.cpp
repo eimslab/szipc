@@ -93,11 +93,7 @@ int Szip::compressBytes(unsigned char* input, size_t len, vector<unsigned char>&
         return result;
     }
 
-    output.reserve(output_len);
-    for (size_t i = 0; i < output_len; i ++)
-    {
-        output.push_back(buffer[i]);
-    }
+    output.insert(output.end(), buffer, buffer + output_len);
     delete[] buffer;
 
     return Z_OK;
@@ -138,11 +134,7 @@ int Szip::uncompressBytes(unsigned char* input, size_t len, vector<unsigned char
         return result;
     }
 
-    output.reserve(output_len);
-    for (size_t i = 0; i < output_len; i ++)
-    {
-        output.push_back(buffer[i]);
-    }
+    output.insert(output.end(), buffer, buffer + output_len);
     delete[] buffer;
 
     return Z_OK;
@@ -283,11 +275,7 @@ void Szip::put(int type, const string& name, vector<unsigned char>& buffer)
     string t = (type == PUT_FILE_T) ? baseName(name) : name;
 #endif
     szip::Bytes::write<unsigned short>((unsigned short)t.length(), buffer, buffer.size());
-
-    for (size_t i = 0; i < t.length(); i++)
-    {
-        buffer.push_back(t[i]);
-    }
+    buffer.insert(buffer.end(), (unsigned char*)(t.c_str()), (unsigned char*)(t.c_str()) + t.length());
 
     if (type == PUT_FILE_T)
     {
@@ -300,10 +288,7 @@ void Szip::put(int type, const string& name, vector<unsigned char>& buffer)
         is.read(content, len);
         is.close();
         szip::Bytes::write<unsigned int>((unsigned int)len, buffer, buffer.size());
-        for (int i = 0; i < len; i++)
-        {
-            buffer.push_back(content[i]);
-        }
+        buffer.insert(buffer.end(), (unsigned char*)content, (unsigned char*)content + len);
         delete[] content;
     }
 }
