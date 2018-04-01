@@ -2,8 +2,8 @@ md Release
 mkdir Release/src
 cd Release
 
-g++ -O3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/filesystem.d" -MT"src/filesystem.o" -o "src/filesystem.o" "../src/filesystem.cpp" -I"C:\Program Files\zlib\include"
-g++ -O3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/szip.d" -MT"src/szip.o" -o "src/szip.o" "../src/szip.cpp" -I"C:\Program Files\zlib\include"
+g++ -O3 -Wall -c -fmessage-length=0 -std=c++11 -MMD -MP -MF"src/filesystem.d" -MT"src/filesystem.o" -o "src/filesystem.o" "../src/filesystem.cpp" -I"C:\Program Files\zlib\include"
+g++ -O3 -Wall -c -fmessage-length=0 -std=c++11 -MMD -MP -MF"src/szip.d" -MT"src/szip.o" -o "src/szip.o" "../src/szip.cpp" -I"C:\Program Files\zlib\include"
 g++ -shared -fPIC -o "szipc.dll" ./src/szip.o ./src/filesystem.o -lz
 
 
@@ -13,3 +13,4 @@ g++ -O3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/filesystem.d" -MT"src/files
 g++ -O3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/szip.d" -MT"src/szip.o" -o "src/szip.o" "../src/szip.cpp" -I"C:\Program Files\zlib\include"
 g++ -O3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/test.d" -MT"src/test.o" -o "src/test.o" "../src/test.cpp" -I"C:\Program Files\zlib\include"
 g++ -fPIC -o "szipc.exe" ./src/szip.o ./src/filesystem.o ./src/test.o -lz
+
