@@ -10,14 +10,17 @@ using namespace std;
 
 class Szip
 {
+
 public:
+
     static int compressBytes  (unsigned char* input, size_t len, vector<unsigned char>& output);
     static int uncompressBytes(unsigned char* input, size_t len, vector<unsigned char>& output);
-    static void zip           (const string& sourceDirOrFileName, const string& outputFilename);
-    static void unzip         (const string& szipFilename, const string& outputPath);
+    static int zip            (const string& sourceDirOrFileName, const string& outputFilename);
+    static int unzip          (const string& szipFilename, const string& outputPath);
 
 private:
 
-    static void readFile(const string& dir, const string& rootDir, vector<unsigned char>& buffer);
-    static void put(int type, const string& name, vector<unsigned char>& buffer);
+    static void getFolderSize(const string& dir, const string& rootDir, size_t& size);
+    static void readFile(const string& dir, const string& rootDir, unsigned char* buffer, size_t& pos);
+    static void put(int type, const string& name, unsigned char* buffer, size_t& pos);
 };
