@@ -1,6 +1,7 @@
 #include <cassert>
 #include <iostream>
 #include <fstream>
+#include <cstring>
 // The zlib library must be installed, for example(for macos): brew install zlib
 // link flag: -lz
 #include <zlib.h>
