@@ -148,7 +148,7 @@ int Szip::zip(const string& sourceDirOrFileName, const string& outputFilename)
     assert(fileExists(sourceDirOrFileName));
     assert(outputFilename != "");
 
-    size_t srcSize, pos = 0;
+    size_t srcSize = 0, pos = 0;
     if (isFile(sourceDirOrFileName))
     {
         srcSize = fileLength(sourceDirOrFileName);
@@ -196,6 +196,7 @@ int Szip::zip(const string& sourceDirOrFileName, const string& outputFilename)
     return Z_OK;
 }
 
+
 int Szip::unzip(const string& szipFilename, const string& outputPath)
 {
     assert(fileExists(szipFilename));
@@ -211,7 +212,7 @@ int Szip::unzip(const string& szipFilename, const string& outputPath)
 
     unsigned long output_len = (unsigned long)len * 10;
     unsigned char* buffer = new unsigned char[output_len];
-    int result = uncompress(buffer, &output_len, data, (unsigned long)len);
+    int result = uncompress(buffer, &output_len, data + 2, (unsigned long)len - 2);
 
     if (result == Z_DATA_ERROR)
     {
@@ -227,7 +228,7 @@ int Szip::unzip(const string& szipFilename, const string& outputPath)
         delete[] buffer;
         buffer = new unsigned char[output_len];
 
-        result = uncompress(buffer, &output_len, data, (unsigned long)len);
+        result = uncompress(buffer, &output_len, data + 2, (unsigned long)len - 2);
     }
 
     delete[] data;
@@ -237,6 +238,11 @@ int Szip::unzip(const string& szipFilename, const string& outputPath)
         delete[] buffer;
 
         return result;
+    }
+
+    if (!fileExists(outputPath))
+    {
+        createDirectories(outputPath);
     }
 
     string dir = outputPath;
