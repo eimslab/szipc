@@ -493,14 +493,17 @@ string ansi2utf8(const string& ansi)
     int len = MultiByteToWideChar(CP_ACP, 0, ansi.c_str(), (int)ansi.length(), NULL, 0);
 
     WCHAR* lpszW = new WCHAR[len];
-    assert(MultiByteToWideChar(CP_ACP, 0, ansi.c_str(), (int)ansi.length(), lpszW, len) == len);
+    wmemset(lpszW, 0, len);
+    int afterLen = MultiByteToWideChar(CP_ACP, 0, ansi.c_str(), (int)ansi.length(), lpszW, len);
+    assert(afterLen == len);
 
     int utf8_len = WideCharToMultiByte(CP_UTF8, 0, lpszW, len, NULL, 0, NULL, NULL);
     assert(utf8_len > 0);
 
     char* utf8_string = new char[utf8_len + 1];
     memset(utf8_string, 0, utf8_len + 1);
-    assert(WideCharToMultiByte(CP_UTF8, 0, lpszW, len, utf8_string, utf8_len, NULL, NULL) == utf8_len);
+    afterLen = WideCharToMultiByte(CP_UTF8, 0, lpszW, len, utf8_string, utf8_len, NULL, NULL);
+    assert(afterLen == utf8_len);
 
     string ret(utf8_string);
 
@@ -518,14 +521,17 @@ string utf82ansi(const string& utf8)
     int len = MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), (int)utf8.length(), NULL, 0);
 
     WCHAR* lpszW = new WCHAR[len];
-    assert(MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), (int)utf8.length(), lpszW, len) == len);
+    wmemset(lpszW, 0, len);
+    int afterLen = MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), (int)utf8.length(), lpszW, len);
+    assert(afterLen == len);
 
     int ansi_len = WideCharToMultiByte(CP_ACP, 0, lpszW, len, NULL, 0, NULL, NULL);
     assert(ansi_len > 0);
 
     char* ansi_string = new char[ansi_len + 1];
     memset(ansi_string, 0, ansi_len + 1);
-    assert(WideCharToMultiByte(CP_ACP, 0, lpszW, len, ansi_string, ansi_len, NULL, NULL) == ansi_len);
+    afterLen = WideCharToMultiByte(CP_ACP, 0, lpszW, len, ansi_string, ansi_len, NULL, NULL);
+    assert(afterLen == ansi_len);
 
     string ret(ansi_string);
 
